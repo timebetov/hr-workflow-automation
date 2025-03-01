@@ -1,15 +1,13 @@
-# Task 1
+# Task 2
 
-* IoC (Inversion Of Control)
-* DI (Dependency Injection)
+* JDBC Template + H2 in-memory database
+* Aspect Oriented Programming
 
-Simple console application using Spring core. Here I used three DTO classes such as:
-1. Candidate
-2. Interview
-3. Job
- 
-Designed One-To-Many relationship between Job and Candidate. One job can have multiple candidates.
-Also implemented basic CRUD operations.
-Got service bean from Spring ApplicationContext in `main` method.
+### Models
+1. User
+2. Job
+3. Candidate (extends User)
 
-Created objects using Builder pattern with help of Lombok.
+### AOP Aspects
+* LoggingAspect
+* ExecutionTimeAspect - monitoring execution time
