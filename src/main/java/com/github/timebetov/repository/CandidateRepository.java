@@ -1,54 +1,21 @@
 package com.github.timebetov.repository;
 
-import com.github.timebetov.dto.Candidate;
-import org.springframework.stereotype.Repository;
+import com.github.timebetov.model.Candidate;
+import com.github.timebetov.model.Job;
+import com.github.timebetov.model.status.CandidateStatus;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-@Repository
-public class CandidateRepository implements CandidateRepositoryInterface {
+public interface CandidateRepository {
 
-    private final List<Candidate> candidates = new ArrayList<>();
+    boolean save(Candidate candidate);
+    Optional<Candidate> findById(UUID id);
+    List<Candidate> findAll();
+    boolean setStatus(UUID id, CandidateStatus status);
+    boolean delete(UUID id);
 
-    @Override
-    public List<Candidate> findAll() {
-        return new ArrayList<>(candidates);
-    }
-
-    @Override
-    public Candidate findById(int id) {
-
-        return candidates.stream()
-                .filter(c -> c.getId() == id)
-                .findFirst()
-                .orElse(null);
-    }
-
-    @Override
-    public boolean add(Candidate candidate) {
-
-        if (null != findById(candidate.getId())) {
-            throw new IllegalArgumentException("Candidate with ID: " + candidate.getId() + " already exists");
-        }
-        return candidates.add(candidate);
-    }
-
-    @Override
-    public Candidate update(int id, Candidate candidate) {
-
-        Candidate candidateToUpdate = findById(id);
-        if (null == candidateToUpdate) {
-            throw new IllegalArgumentException("Candidate with ID: " + candidate.getId() + " not found");
-        }
-        candidateToUpdate.setName(candidate.getName());
-        candidateToUpdate.setEmail(candidate.getEmail());
-
-        return candidateToUpdate;
-    }
-
-    @Override
-    public boolean remove(int id) {
-        return candidates.removeIf(c -> c.getId() == id);
-    }
+    boolean applyForJob(UUID candidateId, UUID jobId);
+    List<Job> findAppliedJobs(UUID candidateId);
 }

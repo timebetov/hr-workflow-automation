@@ -1,45 +1,71 @@
 package com.github.timebetov.service;
 
-import com.github.timebetov.dto.Candidate;
-import com.github.timebetov.repository.CandidateRepositoryInterface;
-import lombok.RequiredArgsConstructor;
+import com.github.timebetov.model.Candidate;
+import com.github.timebetov.model.Job;
+import com.github.timebetov.model.User;
+import com.github.timebetov.model.status.CandidateStatus;
+import com.github.timebetov.repository.CandidateRepository;
+import com.github.timebetov.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class CandidateService {
 
-    private final CandidateRepositoryInterface candidateRepository;
+    private final UserRepository userRepository;
+    private final CandidateRepository candidateRepository;
+
+    @Autowired
+    public CandidateService(UserRepository userRepository, CandidateRepository candidateRepository) {
+        this.userRepository = userRepository;
+        this.candidateRepository = candidateRepository;
+    }
+
+    @Transactional
+    public boolean registerCandidate(Candidate candidate) {
+
+        User savedUser = userRepository.save(candidate);
+        if (savedUser == null) return false;
+        candidate.setId(savedUser.getId());
+        return candidateRepository.save(candidate);
+    }
+
+    public Optional<Candidate> getCandidateById(UUID id) {
+        return candidateRepository.findById(id);
+    }
 
     public List<Candidate> getAllCandidates() {
         return candidateRepository.findAll();
     }
 
-    public Candidate getCandidate(int id) {
+    public boolean setStatus(UUID id, CandidateStatus status) {
 
-        Candidate candidate = candidateRepository.findById(id);
-        if (candidate == null) {
-            throw new IllegalArgumentException("Candidate with ID: " + id + " not found");
-        }
-        return candidate;
+        return candidateRepository.setStatus(id, status);
     }
 
-    public boolean addCandidate(Candidate candidate) {
+    @Transactional
+    public boolean deleteCandidate(UUID id) {
 
-        Objects.requireNonNull(candidate, "Candidate cannot be null");
-        return candidateRepository.add(candidate);
+        boolean isDeleted = candidateRepository.delete(id);
+        if (!isDeleted) return false;
+        return userRepository.delete(id);
     }
 
-    public Candidate updateCandidate(int id, Candidate candidate) {
+    public boolean applyForJob(UUID candidateId, UUID jobId) {
 
-        Objects.requireNonNull(candidate, "Candidate cannot be null");
-        return candidateRepository.update(id, candidate);
+        boolean isApplied = candidateRepository.applyForJob(candidateId, jobId);
+        if (!isApplied)
+            throw new IllegalStateException("You Have already applied for this job!");
+
+        return isApplied;
     }
 
-    public boolean removeCandidate(int id) {
-        return candidateRepository.remove(id);
+    public List<Job> getAppliedJobs(UUID candidateId) {
+        return candidateRepository.findAppliedJobs(candidateId);
     }
 }
