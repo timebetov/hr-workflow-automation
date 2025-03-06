@@ -1,12 +1,16 @@
-# Task 2
+# Task 3
 
-* JDBC Template + H2 in-memory database
+* Spring Data JPA
+* H2 in-memory database
 * Aspect Oriented Programming
+* Hibernate used as a JPA provider
+* UNIT testing for layer services
 
 ### Models
 1. User
 2. Job
-3. Candidate (extends User)
+3. Interview
+4. Application
 
 ### AOP Aspects
 * LoggingAspect
