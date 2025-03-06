@@ -1,52 +1,60 @@
 package com.github.timebetov.service;
 
-import com.github.timebetov.model.Candidate;
 import com.github.timebetov.model.Job;
-import com.github.timebetov.model.User;
 import com.github.timebetov.model.status.JobStatus;
 import com.github.timebetov.repository.JobRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class JobService {
 
     private final JobRepository jobRepository;
 
-    @Autowired
-    public JobService(JobRepository jobRepository) {
-        this.jobRepository = jobRepository;
-    }
-
-    public boolean saveJob(Job job) {
+    @Transactional
+    public Job saveJob(Job job) {
         return jobRepository.save(job);
     }
 
-    public Optional<Job> getJobById(UUID id) {
-        return jobRepository.findById(id);
+    @Transactional(readOnly = true)
+    public Job getJobById(UUID id) {
+
+        return jobRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Job with id " + id + " not found")
+        );
     }
 
+    @Transactional(readOnly = true)
     public List<Job> getAllJobs() {
         return jobRepository.findAll();
     }
 
-    public boolean updateJob(UUID id, Job job) {
-        return jobRepository.update(id, job);
+    @Transactional
+    public void deleteJob(UUID id) {
+
+        if (!jobRepository.existsById(id)) {
+            throw new EntityNotFoundException("Job with id " + id + " not found");
+        }
+        jobRepository.deleteById(id);
     }
 
-    public boolean deleteJob(UUID id) {
-        return jobRepository.delete(id);
-    }
-
+    @Transactional
     public boolean closeJob(UUID id) {
-        return jobRepository.closeJob(id);
+
+        if (!jobRepository.existsById(id)) {
+            throw new EntityNotFoundException("Job with id " + id + " not found");
+        }
+        return jobRepository.closeJob(id) > 0;
     }
 
-    public List<Job> getJobsByStatus(JobStatus status) { return jobRepository.findByStatus(status); }
-
-    public List<Candidate> getCandidates(UUID id) { return jobRepository.getCandidates(id); }
+    @Transactional
+    public List<Job> getJobsByStatus(JobStatus status) {
+        return jobRepository.findByStatus(status);
+    }
 }

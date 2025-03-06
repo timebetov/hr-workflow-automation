@@ -4,8 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -16,14 +14,14 @@ import java.time.Instant;
 @Component
 public class LoggingAspect {
 
-    @Before("execution(* com.github.timebetov.repository.*.*(..))")
+    @Before("execution(* com.github.timebetov..*.*(..))")
     public void beforeLog(JoinPoint joinPoint) throws Throwable {
 
         String methodName = joinPoint.getSignature().getName();
-        log.info("Method execution started: " + methodName);
+        log.info("Method: {} execution started...", methodName);
     }
 
-    @Around("execution(* com.github.timebetov.repository.*.*(..))")
+    @Around("execution(* com.github.timebetov..*.*(..))")
     public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
 
         Instant start = Instant.now();
@@ -38,25 +36,25 @@ public class LoggingAspect {
         return returnObj;
     }
 
-    @After("execution(* com.github.timebetov.repository.*.*(..))")
+    @After("execution(* com.github.timebetov..*.*(..))")
     public void afterLog(JoinPoint joinPoint) throws Throwable {
 
         String methodName = joinPoint.getSignature().getName();
-        log.info("Method execution end: " + methodName);
+        log.info("Method: {} execution end...", methodName);
     }
 
-    @AfterReturning(value = "execution(* com.github.timebetov.repository.*.*(..))", returning = "result")
+    @AfterReturning(value = "execution(* com.github.timebetov..*.*(..))", returning = "result")
     public void logReturn(JoinPoint joinPoint, Object result) {
 
         String methodName = joinPoint.getSignature().getName();
-        log.info("Method execution return: " + methodName + " with result: " + result);
+        log.info("Method: {} execution return result: {}", methodName, result);
     }
 
-    @AfterThrowing(value = "execution(* com.github.timebetov.repository.*.*(..))", throwing = "ex")
+    @AfterThrowing(value = "execution(* com.github.timebetov..*.*(..))", throwing = "ex")
     public void logException(JoinPoint joinPoint, Throwable ex) {
 
         String className = joinPoint.getTarget().getClass().getName();
         String methodName = joinPoint.getSignature().getName();
-        log.error("Execution: "+ methodName + " in: " + className + " failed with exception: " + ex.getMessage());
+        log.error("Execution: {} in {} failed due to: {} ", methodName, className, ex.getMessage());
     }
 }
