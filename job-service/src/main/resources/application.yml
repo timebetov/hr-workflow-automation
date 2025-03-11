@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: job-service
+
+  elasticsearch:
+    uris: http://localhost:9200
+    username: jobelastic
+    password: passwordJob
+
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: job-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+app:
+  topics:
+    log-info: logs.info
+    log-error: logs.error
+    job-request: job.req
+    job-response: job.res
+
+server:
+  port: 8082

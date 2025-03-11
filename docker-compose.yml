@@ -1,0 +1,131 @@
+services:
+  postgresdb-users:
+    container_name: postgres-users
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${USERS_DB_NAME}
+      POSTGRES_USER: ${USERS_DB_USERNAME}
+      POSTGRES_PASSWORD: ${USERS_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgsql_users_data:/var/lib/postgresql/data
+    networks:
+      - hr_network
+
+  postgres-workflow:
+    container_name: postgres-workflow
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${WORKFLOW_DB_NAME}
+      POSTGRES_USER: ${WORKFLOW_DB_USERNAME}
+      POSTGRES_PASSWORD: ${WORKFLOW_DB_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgsql_workflow_data:/var/lib/postgresql/data
+    networks:
+      - hr_network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - hr_network
+
+  kafka:
+    container_name: kafka
+    hostname: kafka
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    restart: on-failure
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    networks:
+      - hr_network
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui
+    ports:
+      - "8090:8080"
+    restart: always
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: "kafka:29092"
+    links:
+      - kafka
+    networks:
+      - hr_network
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - hr_network
+
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:8.6.0
+    depends_on:
+      - elasticsearch
+      - kafka
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+      - "5001:5000/tcp"
+      - "5001:5000/udp"
+      - "9600:9600"
+    networks:
+      - hr_network
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:8.6.0
+    restart: always
+    depends_on:
+      - elasticsearch
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: http://elasticsearch:${ES_PORT}
+    ports:
+      - "5601:5601"
+    networks:
+      - hr_network
+
+networks:
+  hr_network:
+    driver: bridge
+
+volumes:
+  pgsql_users_data:
+    driver: local
+  pgsql_workflow_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
