@@ -33,10 +33,11 @@ public class ExceptionHandlingAspect {
                     joinPoint.getSignature().toShortString(),
                     joinPoint.getTarget().getClass().getSimpleName()
             );
-            kafkaTemplate.send(logErrorTopic, errorMsg);
-            log.error("Unexpected error: {}", errorMsg);
 
-            return null;
+            kafkaTemplate.send(logErrorTopic, errorMsg);
+            log.error("Unexpected error: {}", errorMsg, e);
+
+            throw e;
         }
     }
 }

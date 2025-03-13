@@ -35,7 +35,7 @@ public class ExceptionHandlingAspect {
             kafkaTemplate.send(logErrorTopic, errorMsg);
             log.error("Unexpected error: {}", errorMsg);
 
-            return null;
+            throw e;
         }
     }
 }

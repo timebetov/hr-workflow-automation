@@ -1,9 +1,9 @@
 package com.hrworkflow.workflowservice.service;
 
+import com.hrworkflow.workflowservice.dto.ResourceNotFoundException;
 import com.hrworkflow.workflowservice.model.Interview;
 import com.hrworkflow.workflowservice.model.InterviewStatus;
 import com.hrworkflow.workflowservice.repository.InterviewRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -41,8 +41,16 @@ public class InterviewService {
         return interviewRepository.findAll();
     }
 
+    public Interview findById(Long id) {
+
+        return interviewRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Interview not found with id: " + id));
+    }
+
     public Interview findByApplicationId(Long applicationId) {
-        return interviewRepository.findByApplicationId(applicationId).orElseThrow(EntityNotFoundException::new);
+        return interviewRepository.findByApplicationId(applicationId).orElseThrow(
+                () -> new ResourceNotFoundException("Interview not found for applicationId: " + applicationId)
+        );
     }
 
     public List<Interview> findByInterviewerId(Integer interviewerId) {
@@ -56,7 +64,7 @@ public class InterviewService {
     public Interview udpateStatus(Long interviewId, InterviewStatus newStatus) {
 
         Interview interview = interviewRepository.findById(interviewId).orElseThrow(
-                () -> new EntityNotFoundException("Interview with given ID: " + interviewId + " not found")
+                () -> new ResourceNotFoundException("Interview with given ID: " + interviewId + " not found")
         );
         interview.setStatus(newStatus);
         return interviewRepository.save(interview);
@@ -65,7 +73,7 @@ public class InterviewService {
     public Interview updateDate(Long interviewId, LocalDateTime newDate) {
 
         Interview interview = interviewRepository.findById(interviewId).orElseThrow(
-                () -> new EntityNotFoundException("Interview with given ID: " + interviewId + " not found"));
+                () -> new ResourceNotFoundException("Interview with given ID: " + interviewId + " not found"));
         interview.setInterviewDate(newDate);
         Interview savedInterview = interviewRepository.save(interview);
 
@@ -77,7 +85,7 @@ public class InterviewService {
     public void delete(Long interviewId) {
 
         if (!interviewRepository.existsById(interviewId)) {
-            throw new EntityNotFoundException("Interview with given ID: " + interviewId + " does not exist");
+            throw new ResourceNotFoundException("Interview with given ID: " + interviewId + " does not exist");
         }
         interviewRepository.deleteById(interviewId);
     }

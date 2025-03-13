@@ -1,5 +1,10 @@
 package com.hrworkflow.usersservice.service;
 
+import com.hrworkflow.usersservice.dto.ApplicationDTO;
+import com.hrworkflow.usersservice.dto.ApplicationStatus;
+import com.hrworkflow.usersservice.dto.ApplyDTO;
+import com.hrworkflow.usersservice.dto.ResourceNotFoundException;
+import com.hrworkflow.usersservice.feignclient.WorkflowClient;
 import com.hrworkflow.usersservice.model.Role;
 import com.hrworkflow.usersservice.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -15,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class JobApplicationService {
 
     private final UserRepository userRepository;
+    private final WorkflowClient workflowClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Value("${app.topics.application-new}")
@@ -25,25 +31,31 @@ public class JobApplicationService {
 
 
     // Applying for job (ONLY Candidate)
-    public void applyForJob(Integer candidateId, String jobId) {
+    public boolean applyForJob(ApplyDTO apply) {
 
-        if (jobId == null) {
+        if (apply.getJobId() == null) {
             throw new IllegalArgumentException("JobId cannot be null");
         }
 
-        if (!userRepository.existsByIdAndRoleIs(candidateId, Role.CANDIDATE)) {
-            throw new EntityNotFoundException("Candidate with given id: " + candidateId + " not found");
+        if (!userRepository.existsByIdAndRoleIs(apply.getCandidateId(), Role.CANDIDATE)) {
+            throw new ResourceNotFoundException("Candidate with given id: " + apply.getCandidateId() + " not found");
         }
 
         String msgToLog = "Applied for job";
         String messageToEvent = String.format("{\"jobId\": \"%s\", \"candidateId\": %d, \"message\": \"%s\"}",
-                jobId, candidateId, msgToLog);
+                apply.getJobId(), apply.getCandidateId(), msgToLog);
 
         kafkaTemplate.send(applicationNewTopic, messageToEvent);
+
+        return workflowClient.createApplication(apply);
     }
 
     // Changing application status (ONLY HR and ADMIN)
-    public void reqToChangeApplicationStatus(Long applicationId, Integer userId, String status) {
+    public boolean reqToChangeApplicationStatus(ApplicationDTO appDTO) {
+
+        int userId = appDTO.getUserId();
+        ApplicationStatus status = appDTO.getStatus();
+        Long applicationId = appDTO.getApplicationId();
 
         if (status == null) {
             throw new IllegalArgumentException("Status cannot be null");
@@ -57,5 +69,6 @@ public class JobApplicationService {
                 applicationId, status, userId, msgToLog);
 
         kafkaTemplate.send(applicationUpdTopic, messageToEvent);
+        return workflowClient.updateApplicationStatus(appDTO.getApplicationId(), appDTO);
     }
 }

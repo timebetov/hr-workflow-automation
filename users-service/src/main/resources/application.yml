@@ -1,6 +1,6 @@
 spring:
   application:
-    name: users-service
+    name: USERS-SERVICE
 
   datasource:
     url: jdbc:postgresql://localhost:5432/users_db
@@ -27,6 +27,15 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    hostname: localhost
+    home-page-url: http://${eureka.instance.hostname}:${server.port}${server.servlet.context-path}/
+
+
 app:
   topics:
     application-new: application.created
@@ -39,4 +48,17 @@ app:
     user: user-events
 
 server:
-  port: 8081
+  port: 0
+  servlet:
+    context-path: /users-app/api
+
+info:
+  app:
+    name: Users Service
+    description: This microservice for managing users.
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
