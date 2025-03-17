@@ -1,8 +1,8 @@
 package com.hrworkflow.workflowservice.service;
 
-import com.hrworkflow.workflowservice.dto.ApplicationDTO;
 import com.hrworkflow.workflowservice.dto.ApplyDTO;
 import com.hrworkflow.workflowservice.dto.ResourceNotFoundException;
+import com.hrworkflow.workflowservice.dto.SetStatusDTO;
 import com.hrworkflow.workflowservice.feignclient.JobClient;
 import com.hrworkflow.workflowservice.model.Application;
 import com.hrworkflow.workflowservice.model.ApplicationStatus;
@@ -80,23 +80,24 @@ public class ApplicationService {
         return applicationRepository.findByStatus(status);
     }
 
-    public Application updateStatus(ApplicationDTO appDto) {
+    public Application updateStatus(Long applicationId, SetStatusDTO statusDTO) {
 
-        Application application = applicationRepository.findById(appDto.getApplicationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Application with id " + appDto.getApplicationId() + " not found"));
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application with id " + applicationId + " not found"));
 
         ApplicationStatus currentStatus = application.getStatus();
-        if (!isValidStatusTransition(currentStatus, appDto.getStatus())) {
+        if (!isValidStatusTransition(currentStatus, statusDTO.getNewStatus())) {
 
-            String errorMsg = "Invalid status transition: " + currentStatus + " -> " + appDto.getStatus();
+            String errorMsg = "Invalid status transition: " + currentStatus + " -> " + statusDTO.getNewStatus();
             throw new IllegalArgumentException(errorMsg);
         }
 
-        application.setStatus(appDto.getStatus());
+        application.setStatus(statusDTO.getNewStatus());
         applicationRepository.save(application);
         String msgToLog = "Changed the application status";
         String messageToEvent = String.format("{\"applicationId\": %d, \"status\": \"%s\", \"userId\": %d, \"message\": \"%s\"}",
-                appDto.getApplicationId(), appDto.getStatus().name(), appDto.getUserId(), msgToLog);
+                applicationId, statusDTO.getNewStatus().name(), statusDTO.getUserId(), msgToLog);
+
         kafkaTemplate.send(infoLogTopic, messageToEvent);
 
         return application;

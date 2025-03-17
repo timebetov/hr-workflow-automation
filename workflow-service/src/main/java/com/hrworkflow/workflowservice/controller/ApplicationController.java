@@ -1,7 +1,7 @@
 package com.hrworkflow.workflowservice.controller;
 
-import com.hrworkflow.workflowservice.dto.ApplicationDTO;
 import com.hrworkflow.workflowservice.dto.ApplyDTO;
+import com.hrworkflow.workflowservice.dto.SetStatusDTO;
 import com.hrworkflow.workflowservice.model.Application;
 import com.hrworkflow.workflowservice.model.ApplicationStatus;
 import com.hrworkflow.workflowservice.service.ApplicationService;
@@ -24,10 +24,9 @@ public class ApplicationController {
     }
 
     @PatchMapping("/{id}")
-    public boolean updateApplicationStatus(@PathVariable Long id, @RequestBody ApplicationDTO appDto) {
+    boolean updateApplicationStatus(@PathVariable("id") Long id, @RequestBody SetStatusDTO statusDTO) {
 
-        appDto.setApplicationId(id);
-        return applicationService.updateStatus(appDto) != null;
+        return applicationService.updateStatus(id, statusDTO) != null;
     }
 
     @GetMapping("/{id}")
@@ -37,14 +36,14 @@ public class ApplicationController {
 
     @GetMapping
     public List<Application> getAllApplications(
-            @RequestParam(value = "candidateId", required = false) int candidateId,
+            @RequestParam(value = "candidateId", required = false) Integer candidateId,
             @RequestParam(value = "jobId", required = false) String jobId,
             @RequestParam(value = "status", required = false) String status
     ) {
 
         List<Application> applications;
 
-        if (candidateId >= 0) {
+        if (candidateId != null) {
             applications = applicationService.findByCandidateId(candidateId);
         } else if (jobId != null) {
             applications = applicationService.findByJobId(jobId);

@@ -1,19 +1,16 @@
 package com.hrworkflow.usersservice.feignclient;
 
-import com.hrworkflow.usersservice.dto.ApplicationDTO;
-import com.hrworkflow.usersservice.dto.ApplyDTO;
+import com.hrworkflow.usersservice.dto.workflow.ApplyDTO;
+import com.hrworkflow.usersservice.dto.workflow.SetStatusDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(value = "WORKFLOW-SERVICE", path = "/workflow-app/api")
 public interface WorkflowClient {
 
-    @PostMapping
+    @PostMapping("/applications")
     boolean createApplication(@RequestBody ApplyDTO applyDTO);
 
-    @PatchMapping("/{id}")
-    boolean updateApplicationStatus(@PathVariable Long id, @RequestBody ApplicationDTO appDto);
+    @PatchMapping("/applications/{id}")
+    boolean updateApplicationStatus(@PathVariable("id") Long id, @RequestBody SetStatusDTO statusDTO);
 }

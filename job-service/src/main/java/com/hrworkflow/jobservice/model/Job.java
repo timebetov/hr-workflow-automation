@@ -32,10 +32,4 @@ public class Job {
 
     @Field(type = FieldType.Keyword)
     private JobStatus status;
-
-    @Field(type = FieldType.Double)
-    private Double salary;
-
-    @Field(type = FieldType.Keyword)
-    private List<String> skills;
 }

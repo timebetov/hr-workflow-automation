@@ -1,6 +1,6 @@
 spring:
   application:
-    name: JOB-SERVICE
+    name: job-service
 
   elasticsearch:
     uris: http://localhost:9200
@@ -22,14 +22,18 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 
 eureka:
+  instance:
+    metadata-map:
+      configPath: /jobs-app/api
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
-  instance:
-    hostname: localhost
-    home-page-url: http://${eureka.instance.hostname}:${server.port}${server.servlet.context-path}/
 
 app:
   topics:
@@ -37,6 +41,9 @@ app:
     log-error: logs.error
     job-request: job.req
     job-response: job.res
+  jwt:
+    secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
+    expiration: 86400000
 
 server:
   port: 0
@@ -49,7 +56,11 @@ info:
     description: This microservice for managing jobs.
 
 management:
+  info:
+    env:
+      enabled: true
   endpoints:
     web:
       exposure:
         include: "*"
+

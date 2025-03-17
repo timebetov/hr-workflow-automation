@@ -1,6 +1,6 @@
 spring:
   application:
-    name: WORKFLOW-SERVICE
+    name: workflow-service
 
   datasource:
     url: jdbc:postgresql://localhost:5434/workflow_db
@@ -26,14 +26,18 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 
 eureka:
+  instance:
+    metadata-map:
+      configPath: /workflow-app/api
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
-  instance:
-    hostname: localhost
-    home-page-url: http://${eureka.instance.hostname}:${server.port}${server.servlet.context-path}/
 
 app:
   topics:
@@ -45,6 +49,9 @@ app:
     job-response: job.res
 
     interview: interview-events
+  jwt:
+    secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
+    expiration: 86400000
 
 
 server:
@@ -58,6 +65,9 @@ info:
     description: This microservice for managing applies for job and interviews.
 
 management:
+  info:
+    env:
+      enabled: true
   endpoints:
     web:
       exposure:

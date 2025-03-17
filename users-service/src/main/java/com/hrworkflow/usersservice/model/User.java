@@ -5,6 +5,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Getter
@@ -17,31 +24,25 @@ import lombok.*;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq")
+    @SequenceGenerator(name = "user_id_seq", sequenceName = "user_id_seq", allocationSize = 1)
+    private Long id;
 
-    @NotBlank(message = "Firstname must not be blank")
-    @Size(min = 3, message = "Firstname must be at least 3 characters long")
     private String firstName;
-
-    @NotBlank(message = "Lastname must not be blank")
-    @Size(min = 3, message = "Lastname must be at least 3 characters long")
     private String lastName;
 
     @Column(unique = true, nullable = false)
-    @NotBlank(message = "Email must not be blank")
-    @Email(message = "Please provide a valid email address")
     private String email;
 
-    @NotBlank(message = "Password must not be blank")
-    @Size(min = 8, message = "Password must be at least 8 characters long")
     private String password;
-
-    @NotBlank(message = "Position must be not blank")
-    @Size(min = 2, message = "Position must be at least 2 characters long")
     private String position;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     private Role role;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }

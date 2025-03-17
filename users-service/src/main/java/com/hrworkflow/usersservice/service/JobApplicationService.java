@@ -1,9 +1,9 @@
 package com.hrworkflow.usersservice.service;
 
-import com.hrworkflow.usersservice.dto.ApplicationDTO;
-import com.hrworkflow.usersservice.dto.ApplicationStatus;
-import com.hrworkflow.usersservice.dto.ApplyDTO;
+import com.hrworkflow.usersservice.dto.workflow.ApplicationStatus;
+import com.hrworkflow.usersservice.dto.workflow.ApplyDTO;
 import com.hrworkflow.usersservice.dto.ResourceNotFoundException;
+import com.hrworkflow.usersservice.dto.workflow.SetStatusDTO;
 import com.hrworkflow.usersservice.feignclient.WorkflowClient;
 import com.hrworkflow.usersservice.model.Role;
 import com.hrworkflow.usersservice.repository.UserRepository;
@@ -51,24 +51,20 @@ public class JobApplicationService {
     }
 
     // Changing application status (ONLY HR and ADMIN)
-    public boolean reqToChangeApplicationStatus(ApplicationDTO appDTO) {
+    public boolean reqToChangeApplicationStatus(Long applicationId, SetStatusDTO statusDTO) {
 
-        int userId = appDTO.getUserId();
-        ApplicationStatus status = appDTO.getStatus();
-        Long applicationId = appDTO.getApplicationId();
+        ApplicationStatus newStatus = statusDTO.getNewStatus();
+        Long userId = statusDTO.getUserId();
 
-        if (status == null) {
-            throw new IllegalArgumentException("Status cannot be null");
-        }
         if (!(userRepository.existsByIdAndRoleIs(userId, Role.HR) || userRepository.existsByIdAndRoleIs(userId, Role.ADMIN))) {
             throw new EntityNotFoundException("Only HR or ADMIN can change application status. User ID: " + userId);
         }
 
         String msgToLog = "Requested to change application status";
         String messageToEvent = String.format("{\"applicationId\": %d, \"status\": \"%s\", \"userId\": %d, \"message\": \"%s\"}",
-                applicationId, status, userId, msgToLog);
+                applicationId, newStatus, userId, msgToLog);
 
         kafkaTemplate.send(applicationUpdTopic, messageToEvent);
-        return workflowClient.updateApplicationStatus(appDTO.getApplicationId(), appDTO);
+        return workflowClient.updateApplicationStatus(applicationId, statusDTO);
     }
 }

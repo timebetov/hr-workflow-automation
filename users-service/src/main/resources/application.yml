@@ -1,6 +1,7 @@
 spring:
   application:
-    name: USERS-SERVICE
+    name: users-service
+
 
   datasource:
     url: jdbc:postgresql://localhost:5432/users_db
@@ -26,14 +27,18 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 
 eureka:
+  instance:
+    metadata-map:
+      configPath: /users-app/api
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
-  instance:
-    hostname: localhost
-    home-page-url: http://${eureka.instance.hostname}:${server.port}${server.servlet.context-path}/
 
 
 app:
@@ -42,10 +47,15 @@ app:
     application-upd: application.changed
     log-info: logs.info
     log-error: logs.error
-
     interview: interview-events
     job: job-events
     user: user-events
+
+  service:
+    users-internal-key: reqToUserService2025
+  jwt:
+    secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
+    expiration: 86400000
 
 server:
   port: 0
@@ -58,7 +68,15 @@ info:
     description: This microservice for managing users.
 
 management:
+  info:
+    env:
+      enabled: true
   endpoints:
     web:
       exposure:
         include: "*"
+logging:
+  file:
+    name: app.log
+  level:
+    root: info

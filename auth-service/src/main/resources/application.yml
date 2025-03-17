@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: auth-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: auth-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+
+eureka:
+  instance:
+    metadata-map:
+      configPath: /users-app/api
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+app:
+  topics:
+    log-info: logs.info
+    log-error: logs.error
+  service:
+    users-internal-key: reqToUserService2025
+  jwt:
+    secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
+    expiration: 86400000
+
+server:
+  port: 0
+  servlet:
+    context-path: /auth-app/api
+
+info:
+  app:
+    name: Auth Service
+    description: This microservice for managing authentication and authorization users.
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -1,4 +1,4 @@
-package com.hrworkflow.usersservice.dto;
+package com.hrworkflow.usersservice.dto.workflow;
 
 public enum ApplicationStatus {
 

@@ -1,7 +1,7 @@
 package com.hrworkflow.usersservice.controller;
 
-import com.hrworkflow.usersservice.dto.ApplicationDTO;
-import com.hrworkflow.usersservice.dto.ApplyDTO;
+import com.hrworkflow.usersservice.dto.workflow.ApplyDTO;
+import com.hrworkflow.usersservice.dto.workflow.SetStatusDTO;
 import com.hrworkflow.usersservice.service.JobApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +18,9 @@ public class JobApplicationController {
         return jobApplicationService.applyForJob(applyDTO);
     }
 
-    @PatchMapping("")
-    public boolean updateApplicationStatus(
-            @PathVariable Integer appid, @RequestBody ApplicationDTO applyDTO) {
+    @PatchMapping("/{appid}")
+    public boolean updateApplicationStatus(@PathVariable Long appid, @RequestBody SetStatusDTO statusDTO) {
 
-        return jobApplicationService.reqToChangeApplicationStatus(applyDTO);
+        return jobApplicationService.reqToChangeApplicationStatus(appid, statusDTO);
     }
 }

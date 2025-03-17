@@ -1,10 +1,11 @@
 package com.hrworkflow.usersservice.controller;
 
+import com.hrworkflow.usersservice.dto.auth.CreateUserRequestDTO;
+import com.hrworkflow.usersservice.dto.auth.UserResponseDTO;
 import com.hrworkflow.usersservice.model.Role;
 import com.hrworkflow.usersservice.model.User;
 import com.hrworkflow.usersservice.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,22 +36,22 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Integer id) {
+    public User getUserById(@PathVariable Long id) {
         return userService.findById(id);
     }
 
     @GetMapping("/email/{email}")
-    public User getUserByEmail(@PathVariable String email) {
-        return userService.findByEmail(email);
+    public UserResponseDTO getUserByEmail(@PathVariable String email) {
+        return userService.findByEmailDTO(email);
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.save(user);
+    public UserResponseDTO createUser(@RequestBody CreateUserRequestDTO req) {
+        return userService.save(req);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Integer id) {
+    public void deleteUser(@PathVariable Long id) {
         userService.delete(id);
     }
 
