@@ -47,7 +47,7 @@
   "candidateId": 1
 }
 ```
-* TO CHANGE THE JOB STATUS `POST /users-app/api/applies/{appid}`
+* TO CHANGE THE APPLICATION STATUS `POST /users-app/api/applies/{appid}`
 ```json
 {
   "userId": 1,
