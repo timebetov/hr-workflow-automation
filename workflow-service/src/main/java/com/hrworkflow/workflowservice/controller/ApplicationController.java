@@ -36,7 +36,7 @@ public class ApplicationController {
 
     @GetMapping
     public List<Application> getAllApplications(
-            @RequestParam(value = "candidateId", required = false) Integer candidateId,
+            @RequestParam(value = "candidateId", required = false) Long candidateId,
             @RequestParam(value = "jobId", required = false) String jobId,
             @RequestParam(value = "status", required = false) String status
     ) {

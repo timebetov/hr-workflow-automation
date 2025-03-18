@@ -29,7 +29,7 @@ public class LoggingAspect {
     @Value("${app.topics.log-info}")
     private String infoLogTopic;
 
-    @Around("execution(* com.hrworkflow.workflowservice..*.*(..))")
+    @Around("execution(* com.hrworkflow.workflowservice.service..*.*(..))")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
 
         Instant startTime = Instant.now();
@@ -59,11 +59,12 @@ public class LoggingAspect {
         String ip = request.getRemoteAddr();
         String uri = request.getRequestURI();
         String httpMethod = request.getMethod();
-        String username = request.getRemoteUser();
+        String username = request.getRemoteUser() != null ? request.getRemoteUser() : "anonymous";
+        int status = (response != null) ? response.getStatus() : 0;
 
         String logMessage = String.format(
                 "{\"httpMethod\": \"%s\", \"ip\": \"%s\", \"url\": \"%s\", \"user\": \"%s\",\"status\": \"%s\"}",
-                httpMethod, ip, uri, username, response != null ? response.getStatus() : 0
+                httpMethod, ip, uri, username, status
         );
 
         kafkaTemplate.send(infoLogTopic, logMessage);
@@ -81,9 +82,8 @@ public class LoggingAspect {
 
         Object[] args = joinPoint.getArgs();
 
-        if (args.length >= 2 && args[1] instanceof String message) {
-
-            log.info(message);
+        if (args.length >= 2 && args[0] instanceof String topic && args[1] instanceof String message) {
+            log.info("Kafka Message Sent -> Topic: {}, Message: {}", topic, message);
         }
 
         return joinPoint.proceed();

@@ -10,9 +10,9 @@ import java.util.List;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    List<Application> findByCandidateId(Integer candidateId);
+    List<Application> findByCandidateId(Long candidateId);
     List<Application> findByJobId(String jobId);
     List<Application> findByStatus(ApplicationStatus status);
 
-    boolean existsByCandidateIdAndJobId(Integer candidateId, String jobId);
+    boolean existsByCandidateIdAndJobId(Long candidateId, String jobId);
 }

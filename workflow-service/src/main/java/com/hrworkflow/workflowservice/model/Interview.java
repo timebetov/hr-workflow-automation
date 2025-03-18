@@ -23,7 +23,7 @@ public class Interview {
     private Long applicationId;
 
     @Column(nullable = false)
-    private Integer interviewerId;
+    private Long interviewerId;
 
     @Column(nullable = false)
     private LocalDateTime interviewDate;

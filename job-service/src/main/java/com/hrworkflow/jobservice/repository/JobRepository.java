@@ -9,6 +9,4 @@ import java.util.List;
 
 @Repository
 public interface JobRepository extends ElasticsearchRepository<Job, String> {
-
-    List<Job> findByStatus(JobStatus jobStatus);
 }

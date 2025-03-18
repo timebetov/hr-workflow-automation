@@ -10,5 +10,5 @@ import lombok.Setter;
 public class ApplyDTO {
 
     private String jobId;
-    private int candidateId;
+    private Long candidateId;
 }

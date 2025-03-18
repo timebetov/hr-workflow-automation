@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SetStatusDTO {
 
-    Integer userId;
+    Long userId;
     ApplicationStatus newStatus;
 }

@@ -41,14 +41,8 @@ eureka:
 
 app:
   topics:
-    application-new: application.created
-    application-upd: application.changed
     log-info: logs.info
     log-error: logs.error
-    job-request: job.req
-    job-response: job.res
-
-    interview: interview-events
   jwt:
     secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
     expiration: 86400000

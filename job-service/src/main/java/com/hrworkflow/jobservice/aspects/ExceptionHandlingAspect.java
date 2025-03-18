@@ -20,7 +20,7 @@ public class ExceptionHandlingAspect {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @Around(value = "execution (* com.hrworkflow.jobservice..*.*(..))")
+    @Around(value = "execution (* com.hrworkflow.jobservice.service..*.*(..))")
     public Object handleExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
 
         try {

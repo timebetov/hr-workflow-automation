@@ -23,7 +23,7 @@ public class Application {
     private Long id;
 
     @Column(name = "candidate_id", nullable = false)
-    private Integer candidateId;
+    private Long candidateId;
 
     @Column(name = "job_id", nullable = false)
     private String jobId;

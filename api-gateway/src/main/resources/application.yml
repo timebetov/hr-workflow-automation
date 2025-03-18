@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        - id: workflow
+          predicates:
+            - Path=/workflow/**
+          uri: lb://WORKFLOW-SERVICE
+
+        - id: job
+          predicates:
+            - Path=/job/**
+          uri: lb://JOB-SERVICE
+
+        - id: identity
+          predicates:
+            - Path=/auth/**
+          uri: lb://IDENTITY-SERVICE

@@ -28,78 +28,94 @@ public class ApplicationService {
     @Value("${app.topics.log-info}")
     private String infoLogTopic;
 
+    // Creating a new application
     public Application createApplication(ApplyDTO applyDTO) {
 
+        // Checking for null
+        if (applyDTO.getJobId() == null) {
+            throw new IllegalArgumentException("JobId cannot be null");
+        }
+
+        // Extracting details
         String jobId = applyDTO.getJobId();
-        int candidateId = applyDTO.getCandidateId();
+        Long candidateId = applyDTO.getCandidateId();
 
+        // TODO: TO CHECK USER ROLE FOR ADMIN OR HR
+
+        String msg = null;
+
+        // Checking if User already applied for job
         if (applicationRepository.existsByCandidateIdAndJobId(candidateId, jobId)) {
-            log.warn("User {} already applied for job {}", candidateId, jobId);
-            throw new IllegalArgumentException(String.format("User %s already applied for job %s", candidateId, jobId));
+            msg = String.format("User %d already applied to job %s", candidateId, jobId);
+            throw new IllegalArgumentException(msg);
         }
 
+        /*
+         * Making REST call to Job Service sending JobId
+         * And checking for job status
+         * Is CLOSED or OPEN
+         */
         String jobStatus = jobClient.checkStatus(jobId);
-
         if (jobStatus.equals("CLOSED")) {
-            log.warn("Application rejected: Job {} is CLOSED", jobId);
-            throw new IllegalArgumentException(String.format("Application rejected: Job %s is CLOSED", jobId));
+            msg = String.format("Application rejected: Job %s is already closed", jobId);
+            throw new IllegalArgumentException(msg);
         }
 
+        // Creating application object to save
         Application application = Application.builder()
                 .candidateId(candidateId)
                 .jobId(jobId)
                 .status(ApplicationStatus.PENDING)
                 .appliedAt(LocalDateTime.now())
                 .build();
+        Application savedApp = applicationRepository.save(application);
 
-
-        applicationRepository.save(application);
-        String msgToLogEvent = String.format("User %s applied for job %s", candidateId, jobId);
-        kafkaTemplate.send(infoLogTopic, msgToLogEvent);
+        // Success case
+        msg = String.format(
+                "{" +
+                        "\"applicationId\": %d, " +
+                        "\"jobId\": \"%s\", " +
+                        "\"candidateId\": %d, " +
+                        "\"message\": \"%s\"" +
+                "}",
+                savedApp.getId(), applyDTO.getJobId(), applyDTO.getCandidateId(), "Applied for job");
+        kafkaTemplate.send(infoLogTopic, msg);
         return application;
-    }
-
-    public Application findById(Long applicationId) {
-        return applicationRepository.findById(applicationId).orElseThrow(() ->
-                new ResourceNotFoundException("Application with id " + applicationId + " not found"));
-    }
-
-    public List<Application> findAll() {
-        return applicationRepository.findAll();
-    }
-
-    public List<Application> findByCandidateId(Integer candidateId) {
-        return applicationRepository.findByCandidateId(candidateId);
-    }
-
-    public List<Application> findByJobId(String jobId) {
-        return applicationRepository.findByJobId(jobId);
-    }
-
-    public List<Application> findByStatus(ApplicationStatus status) {
-        return applicationRepository.findByStatus(status);
     }
 
     public Application updateStatus(Long applicationId, SetStatusDTO statusDTO) {
 
+        // Extracting data from DTO
+        ApplicationStatus newStatus = statusDTO.getNewStatus();
+        Long userId = statusDTO.getUserId();
+
+        /*
+        * TODO: TO CHECK USER ROLE FOR ADMIN OR HR
+        *
+        * throw new EntityNotFoundException("Only HR or ADMIN can change application status. User ID: " + userId);
+        */
+
+        String msg = null;
+
+        // Getting the application from DB
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application with id " + applicationId + " not found"));
 
+        // Checking if possible to switch the application status
         ApplicationStatus currentStatus = application.getStatus();
         if (!isValidStatusTransition(currentStatus, statusDTO.getNewStatus())) {
-
-            String errorMsg = "Invalid status transition: " + currentStatus + " -> " + statusDTO.getNewStatus();
-            throw new IllegalArgumentException(errorMsg);
+            msg = "Invalid status transition: " + currentStatus + " -> " + statusDTO.getNewStatus();
+            throw new IllegalArgumentException(msg);
         }
 
+        // Changing the application status
         application.setStatus(statusDTO.getNewStatus());
         applicationRepository.save(application);
-        String msgToLog = "Changed the application status";
-        String messageToEvent = String.format("{\"applicationId\": %d, \"status\": \"%s\", \"userId\": %d, \"message\": \"%s\"}",
-                applicationId, statusDTO.getNewStatus().name(), statusDTO.getUserId(), msgToLog);
 
+        // Logging
+        String messageToEvent = String.format("{\"applicationId\": %d, \"newStatus\": \"%s\", \"updatedBy\": %d, \"message\": \"%s\"}",
+                applicationId, statusDTO.getNewStatus().name(), statusDTO.getUserId(), "Changed the application status");
         kafkaTemplate.send(infoLogTopic, messageToEvent);
-
         return application;
     }
 
@@ -118,5 +134,26 @@ public class ApplicationService {
             throw new ResourceNotFoundException("Application with id " + applicationId + " not found");
         }
         applicationRepository.deleteById(applicationId);
+    }
+
+    public Application findById(Long applicationId) {
+        return applicationRepository.findById(applicationId).orElseThrow(() ->
+                new ResourceNotFoundException("Application with id " + applicationId + " not found"));
+    }
+
+    public List<Application> findAll() {
+        return applicationRepository.findAll();
+    }
+
+    public List<Application> findByCandidateId(Long candidateId) {
+        return applicationRepository.findByCandidateId(candidateId);
+    }
+
+    public List<Application> findByJobId(String jobId) {
+        return applicationRepository.findByJobId(jobId);
+    }
+
+    public List<Application> findByStatus(ApplicationStatus status) {
+        return applicationRepository.findByStatus(status);
     }
 }
