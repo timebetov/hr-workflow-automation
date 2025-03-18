@@ -21,7 +21,7 @@ Implemented all these requirements inside Job Service. Cause my jobs stored in e
 And this only one microservice using it. So, here are all endpoints:
 
 ### ENDPOINTS
-
+#### BASIC CRUD Operations
 * TO CREATE A NEW JOB `POST /job-app/api/jobs`
 ```json
 {
@@ -33,14 +33,13 @@ And this only one microservice using it. So, here are all endpoints:
   "jobType": "FULL_TIME"
 }
 ```
-### BASIC CRUD Operations
 * TO GET ALL JOBS `GET /jobs-app/api/jobs`
 * TO GET JOB BY ID `GET /jobs-app/api/jobs/{id}`
 * TO UPDATE JOB STATUS BY ID `POST /jobs-app/api/jobs/{id}?status=closed`
 * TO DELETE JOB BY ID `DELETE /jobs-app/api/jobs/{id}`
 * TO GET CURRENT JOB STATUS `GET /jobs-app/api/jobs/checkStatus/{id}`
 
-### Using StreamAPI
+#### Using StreamAPI
 * TO GET FILTERED DATA with RequestBody
 
 `POST /jobs-app/api/jobs/filter`
