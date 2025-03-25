@@ -1,15 +1,15 @@
 package com.hrworkflow.identityservice.service;
 
-import com.hrworkflow.identityservice.dto.UserDetailsDTO;
+import com.hrworkflow.common.utils.JwtUtil;
+import com.hrworkflow.identityservice.dto.Token;
 import com.hrworkflow.identityservice.dto.UserLoginDTO;
 import com.hrworkflow.identityservice.dto.UserRegisterDTO;
 import com.hrworkflow.identityservice.model.Role;
 import com.hrworkflow.identityservice.model.User;
 import com.hrworkflow.identityservice.repository.UserRepository;
-import com.hrworkflow.identityservice.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,12 +18,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
-
-    @Value("${app.topics.log-info}")
-    private String logInfoTopic;
 
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
@@ -31,6 +32,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final ModelMapper modelMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final TokenService tokenService;
 
     public String login(UserLoginDTO userDetails) {
 
@@ -45,13 +47,23 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword())
         );
 
-        String msg = String.format("Username: %s is logged in", user.getUsername());
-        kafkaTemplate.send(logInfoTopic, msg);
+        log.info("Username {} is logged in", user.getUsername());
+        kafkaTemplate.send("user.logged.in", user.getUsername());
 
-        return jwtUtil.generateJwtToken(user);
+        String token = generateJwtToken(user);
+        tokenService.save(Token.builder()
+                        .expiresAt(jwtUtil.extractExpiration(token))
+                        .userId(user.getId())
+                        .username(user.getUsername())
+                        .userRole(String.valueOf(user.getRole()))
+                        .value(token)
+                        .build()
+        );
+
+        return token;
     }
 
-    public UserDetailsDTO register(UserRegisterDTO user) {
+    public String register(UserRegisterDTO user) {
 
         User newUser = modelMapper.map(user, User.class);
 
@@ -65,8 +77,44 @@ public class AuthService {
             savedUser = userRepository.save(savedUser);
         }
 
-        String msg = String.format("New user: %s with ID: %d is registered", savedUser.getUsername(), savedUser.getId());
-        kafkaTemplate.send(logInfoTopic, msg);
-        return modelMapper.map(savedUser, UserDetailsDTO.class);
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+        String token = generateJwtToken(savedUser);
+        tokenService.save(Token.builder()
+                        .expiresAt(jwtUtil.extractExpiration(token))
+                        .userId(savedUser.getId())
+                        .username(savedUser.getUsername())
+                        .userRole(String.valueOf(savedUser.getRole()))
+                        .value(token)
+                        .build()
+        );
+
+        log.info("New user {} is registered", savedUser.getUsername());
+        kafkaTemplate.send("user.registered", savedUser.getUsername());
+        return token;
+    }
+
+    public void logout(String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+        Long userId = jwtUtil.extractUserId(token);
+
+        tokenService.evict(token);
+
+        log.info("User {} is logged out", userId);
+        kafkaTemplate.send("user.logged.out", String.valueOf(userId));
+    }
+
+    private String generateJwtToken(User userDetails) {
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", userDetails.getId());
+        claims.put("email", userDetails.getEmail());
+        claims.put("role", userDetails.getRole());
+
+        return jwtUtil.generateToken(claims, userDetails.getUsername());
     }
 }

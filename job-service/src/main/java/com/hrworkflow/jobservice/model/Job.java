@@ -1,50 +1,65 @@
 package com.hrworkflow.jobservice.model;
 
 
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
+@Entity
 @Getter
 @Setter
+@Builder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Document(indexName = "jobs")
+@Table(name = "jobs")
+@EntityListeners(AuditingEntityListener.class)
 public class Job {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Field(type = FieldType.Text)
     private String title;
-
-    @Field(type = FieldType.Text)
     private String description;
-
-    @Field(type = FieldType.Text)
     private String department;
 
-    @Field(type = FieldType.Keyword)
+    @Enumerated(EnumType.STRING)
     private JobStatus status;
 
-    @Field(type = FieldType.Date, format = DateFormat.date)
-    private LocalDate postedAt;
-
-    @Field(type = FieldType.Date, format = DateFormat.date)
-    private LocalDate deadline;
-
-    @Field(type = FieldType.Double)
+    private LocalDateTime deadline;
     private Double salary;
 
-    @Field(type = FieldType.Keyword)
+    @Enumerated(EnumType.STRING)
     private JobType jobType;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private Long createdBy;
+
+    @LastModifiedDate
+    @Column(insertable = false)
+    private LocalDateTime updatedAt;
+
+    @LastModifiedBy
+    @Column(insertable = false)
+    private Long updatedBy;
+
+    @PrePersist
+    public void prePersist() {
+
+        if (status == null) {
+            status = JobStatus.OPEN;
+        }
+    }
 }

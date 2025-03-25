@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface JobClient {
 
     @GetMapping("/checkStatus/{id}")
-    String checkStatus(@PathVariable String id);
+    String checkStatus(@PathVariable Long id);
 }

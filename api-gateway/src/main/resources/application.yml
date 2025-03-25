@@ -3,18 +3,50 @@ spring:
     name: gateway-service
   cloud:
     gateway:
+      discovery:
+        locator:
+          enabled: true
       routes:
-        - id: workflow
-          predicates:
-            - Path=/workflow/**
+        - id: workflow-service
           uri: lb://WORKFLOW-SERVICE
-
-        - id: job
           predicates:
-            - Path=/job/**
+            - Path=/workflow/api/**
+          filters:
+            - JwtAuthFilter
+
+        - id: job-service
           uri: lb://JOB-SERVICE
-
-        - id: identity
           predicates:
-            - Path=/auth/**
+            - Path=/jobs-app/api/**
+          filters:
+            - JwtAuthFilter
+
+        - id: identity-service
           uri: lb://IDENTITY-SERVICE
+          predicates:
+            - Path=/identity/api/**
+          filters:
+            - JwtAuthFilter
+
+        - id: search-service
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/search/api/**
+
+app:
+  jwt:
+    secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
+    expiration: 86400000
+
+reactor:
+  netty:
+    resolver:
+      preferNative: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+server:
+  port: 8080

@@ -1,6 +1,7 @@
 package com.hrworkflow.identityservice.service;
 
-import com.hrworkflow.identityservice.dto.ResourceNotFoundException;
+import com.hrworkflow.common.exceptions.ResourceNotFoundException;
+import com.hrworkflow.identityservice.dto.Token;
 import com.hrworkflow.identityservice.dto.UserDetailsDTO;
 import com.hrworkflow.identityservice.dto.UserRegisterDTO;
 import com.hrworkflow.identityservice.model.Role;
@@ -8,8 +9,11 @@ import com.hrworkflow.identityservice.model.User;
 import com.hrworkflow.identityservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,12 +23,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
-    @Value("${app.topics.log-info}")
-    private String logInfoTopic;
-
+    private final KafkaTemplate<String, String> kafkaTemplate;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final TokenService tokenService;
+    private final RedisTemplate<String, Token> redisTemplate;
 
     public boolean existsByIdAndRoleIs(Long userId, Role role) {
 
@@ -85,7 +88,7 @@ public class UserService {
         User updatedUser = userRepository.save(user);
 
         String msg = String.format("User: %s with ID: %d is updated", updatedUser.getUsername(), updatedUser.getId());
-        kafkaTemplate.send(logInfoTopic, msg);
+        kafkaTemplate.send("user.updated", msg);
         return modelMapper.map(updatedUser, UserDetailsDTO.class);
     }
 
@@ -95,8 +98,18 @@ public class UserService {
         );
 
         userRepository.deleteById(id);
+        tokenService.evictAllForUser(id);
 
         String msg = String.format("User with ID: %s is deleted", id);
-        kafkaTemplate.send(logInfoTopic, msg);
+        kafkaTemplate.send("user.deleted", msg);
+    }
+
+    public UserDetailsDTO getCurrentUser(){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            return modelMapper.map(user, UserDetailsDTO.class);
+        }
+        throw new AccessDeniedException("Unauthorized");
     }
 }

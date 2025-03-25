@@ -5,8 +5,10 @@ import com.hrworkflow.identityservice.dto.UserLoginDTO;
 import com.hrworkflow.identityservice.dto.UserRegisterDTO;
 import com.hrworkflow.identityservice.service.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -16,16 +18,28 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public UserDetailsDTO register(@RequestBody UserRegisterDTO user) {
-        return authService.register(user);
+    public Map<String, String> register(@RequestBody UserRegisterDTO user) {
+
+        String token = authService.register(user);
+        Map<String, String> response = new HashMap<>();
+        response.put("AccessToken", token);
+        return response;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginDTO loginCredentials) {
+    public Map<String, String> login(@RequestBody UserLoginDTO loginCredentials) {
 
         String token = authService.login(loginCredentials);
-        return ResponseEntity.ok(new TokenResponse(token));
+        Map<String, String> response = new HashMap<>();
+        response.put("AccessToken", token);
+        return response;
     }
 
-    private record TokenResponse(String token) {}
+    @PostMapping("/logout")
+    public Map<String, String> logout(@RequestHeader(value = "Authorization") String authHeader) {
+        authService.logout(authHeader);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Successfully logged out");
+        return response;
+    }
 }

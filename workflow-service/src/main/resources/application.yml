@@ -1,7 +1,6 @@
 spring:
   application:
     name: workflow-service
-
   datasource:
     url: jdbc:postgresql://localhost:5434/workflow_db
     username: postgres
@@ -14,6 +13,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
 
   kafka:
@@ -21,11 +23,13 @@ spring:
     consumer:
       group-id: workflow-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: '*'
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   cloud:
     openfeign:
       okhttp:
@@ -34,24 +38,15 @@ spring:
 eureka:
   instance:
     metadata-map:
-      configPath: /workflow-app/api
+      configPath: /workflow/api/
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
 
-app:
-  topics:
-    log-info: logs.info
-    log-error: logs.error
-  jwt:
-    secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
-    expiration: 86400000
-
-
 server:
   port: 0
   servlet:
-    context-path: /workflow-app/api
+    context-path: /workflow/api/
 
 info:
   app:

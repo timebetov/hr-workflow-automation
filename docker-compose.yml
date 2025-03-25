@@ -14,6 +14,21 @@ services:
     networks:
       - hr_network
 
+  postgres-job:
+    container_name: postgres-job
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${JOB_DB_NAME}
+      POSTGRES_USER: ${JOB_DB_USERNAME}
+      POSTGRES_PASSWORD: ${JOB_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgsql_job_data:/var/lib/postgresql/data
+    networks:
+      - hr_network
+
   postgres-workflow:
     container_name: postgres-workflow
     image: postgres:15
@@ -29,10 +44,18 @@ services:
     networks:
       - hr_network
 
+  redis:
+    container_name: redis
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+
   zookeeper:
+    container_name: zookeeper
     image: confluentinc/cp-zookeeper:latest
     hostname: zookeeper
-    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -124,6 +147,8 @@ networks:
 
 volumes:
   pgsql_users_data:
+    driver: local
+  pgsql_job_data:
     driver: local
   pgsql_workflow_data:
     driver: local

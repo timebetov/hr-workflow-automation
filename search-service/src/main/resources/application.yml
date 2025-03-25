@@ -1,0 +1,33 @@
+spring:
+    application:
+        name: search-service
+    cloud:
+        openfeign:
+            okhttp:
+                enabled: true
+eureka:
+    instance:
+        metadata-map:
+            configPath: /search/api/
+    client:
+        service-url:
+            defaultZone: http://localhost:8761/eureka
+
+server:
+    port: 0
+    servlet:
+        context-path: /search/api/
+
+info:
+    app:
+        name: Search Service
+        description: This microservice for manage searching.
+
+management:
+    info:
+        env:
+            enabled: true
+    endpoints:
+        web:
+            exposure:
+                include: "*"

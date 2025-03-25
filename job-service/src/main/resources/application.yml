@@ -1,27 +1,28 @@
 spring:
   application:
     name: job-service
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
-  elasticsearch:
-    uris: http://localhost:9200
-    username: jobelastic
-    password: passwordJob
-
-  data:
-    elasticsearch:
-      repositories:
-        enabled: true
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/jobs_db
+    username: jobber
+    password: jobberPass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
   kafka:
     bootstrap-servers: localhost:9092
-    consumer:
-      group-id: job-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: earliest
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   cloud:
     openfeign:
       okhttp:
@@ -30,25 +31,20 @@ spring:
 eureka:
   instance:
     metadata-map:
-      configPath: /jobs-app/api
+      configPath: /jobs-app/api/
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
 
 app:
   topics:
-    log-info: logs.info
-    log-error: logs.error
-    job-request: job.req
-    job-response: job.res
-  jwt:
-    secret-key: Zw1dsOA1hqSKlX9PVREovrt2S0h8AydmIvb4FwC/Ij4=
-    expiration: 86400000
+    appsub: application.submitted
+    buslog: logs.business
 
 server:
   port: 0
   servlet:
-    context-path: /jobs-app/api
+    context-path: /jobs-app/api/
 
 info:
   app:
@@ -63,4 +59,3 @@ management:
     web:
       exposure:
         include: "*"
-

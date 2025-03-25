@@ -4,7 +4,7 @@ import org.springframework.security.core.GrantedAuthority;
 
 public enum Role implements GrantedAuthority {
 
-    HR, ADMIN, CANDIDATE, INTERVIEWER;
+    HR, ADMIN, CANDIDATE;
 
     @Override
     public String getAuthority() {

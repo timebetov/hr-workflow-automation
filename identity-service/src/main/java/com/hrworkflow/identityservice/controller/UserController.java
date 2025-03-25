@@ -7,7 +7,9 @@ import com.hrworkflow.identityservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -61,9 +63,11 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public String deleteUserById(@PathVariable Long id) {
+    public Map<String, String> deleteUserById(@PathVariable Long id) {
 
         userService.deleteUserById(id);
-        return "User with id: " + id + " deleted";
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User with id " + id + " has been deleted");
+        return response;
     }
 }

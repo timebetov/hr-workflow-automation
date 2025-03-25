@@ -11,8 +11,8 @@ import java.util.List;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
     List<Application> findByCandidateId(Long candidateId);
-    List<Application> findByJobId(String jobId);
+    List<Application> findByJobId(Long jobId);
     List<Application> findByStatus(ApplicationStatus status);
 
-    boolean existsByCandidateIdAndJobId(Long candidateId, String jobId);
+    boolean existsByCandidateIdAndJobId(Long candidateId, Long jobId);
 }

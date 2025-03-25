@@ -1,7 +1,6 @@
 package com.hrworkflow.workflowservice.controller;
 
-import com.hrworkflow.workflowservice.dto.ApplyDTO;
-import com.hrworkflow.workflowservice.dto.SetStatusDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hrworkflow.workflowservice.model.Application;
 import com.hrworkflow.workflowservice.model.ApplicationStatus;
 import com.hrworkflow.workflowservice.service.ApplicationService;
@@ -17,16 +16,17 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @PostMapping
-    public boolean createApplication(@RequestBody ApplyDTO applyDTO) {
-
-        return applicationService.createApplication(applyDTO) != null;
+    @PostMapping("/apply/{jobId}")
+    public boolean createApplication(@PathVariable Long jobId) throws JsonProcessingException {
+        return applicationService.createApplication(jobId) != null;
     }
 
     @PatchMapping("/{id}")
-    boolean updateApplicationStatus(@PathVariable("id") Long id, @RequestBody SetStatusDTO statusDTO) {
+    boolean updateApplicationStatus(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "newStatus") String newStatus) throws JsonProcessingException {
 
-        return applicationService.updateStatus(id, statusDTO) != null;
+        return applicationService.updateStatus(id, newStatus) != null;
     }
 
     @GetMapping("/{id}")
@@ -37,7 +37,7 @@ public class ApplicationController {
     @GetMapping
     public List<Application> getAllApplications(
             @RequestParam(value = "candidateId", required = false) Long candidateId,
-            @RequestParam(value = "jobId", required = false) String jobId,
+            @RequestParam(value = "jobId", required = false) Long jobId,
             @RequestParam(value = "status", required = false) String status
     ) {
 
@@ -54,6 +54,12 @@ public class ApplicationController {
         }
 
         return applications;
+    }
+
+    @GetMapping("/myApplications")
+    public List<Application> getMyApplications() {
+
+        return applicationService.findMyApplications();
     }
 
     @DeleteMapping("/{id}")
